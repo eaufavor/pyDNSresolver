@@ -12,6 +12,7 @@ import datetime
 import threading
 import traceback
 import SocketServer
+import random
 import dnslib
 from dnslib import *
 
@@ -24,10 +25,28 @@ cache = {}
 DNSlist = ['8.8.8.8']
 PORT = 53
 
+smartList = {'lb.dns.sid.eaufavor.info.': \
+                {
+                    '127.0.0.1':['8.9.10.11', '8.9.10.12'],
+                    'default':['8.9.10.13', '8.9.10.14'],
+                }
+            }
+
+def smartLookup(domain, client):
+    if client in smartList[domain]:
+        return random.choice(smartList[domain][client])
+    else:
+        return random.choice(smartList[domain]['default'])
+
+
 def fetch(dns_index_req):
     dns_index = dns_index_req[0]
     domain = dns_index_req[1]
     query_type = dns_index_req[2]
+    client = dns_index_req[3]
+    if domain in smartList:
+        ip = smartLookup(domain, client)
+        return ([ip], 0)
     q = message.make_query(domain, query_type)
     rcode = q.rcode()
     count = 0
@@ -53,7 +72,7 @@ def fetch(dns_index_req):
         ips.append(ans.to_text())
     return (ips, rcode)
 
-def dns_response(data):
+def dns_response(data, client):
     request = DNSRecord.parse(data)
     print request
     reply = DNSRecord(DNSHeader(id=request.header.id, qr=1, aa=1, ra=1), q=request.q)
@@ -67,9 +86,9 @@ def dns_response(data):
 
     dns_index_req = []
     for i in range(len(DNSlist)):
-        dns_index_req.append((i, qn, qtype))
+        dns_index_req.append((i, qn, qtype, client))
 
-    if (qn, qtype) in cache:
+    if qn not in smartList and (qn, qtype) in cache:
         answers = cache[(qn, qtype)]
     else:
         answers = p.map_async(fetch, dns_index_req).get(9999)
@@ -123,7 +142,7 @@ class BaseRequestHandler(SocketServer.BaseRequestHandler):
         try:
             data = self.get_data()
             print len(data), data.encode('hex')  # repr(data).replace('\\x', '')[1:-1]
-            self.send_data(dns_response(data))
+            self.send_data(dns_response(data, self.client_address[0]))
         except Exception:
             traceback.print_exc(file=sys.stderr)
  
