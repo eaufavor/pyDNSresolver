@@ -28,11 +28,14 @@ TTL = 20
 
 UCLADNS = '204.194.237.21'
 OKSUDNS = '139.78.100.1'
-NYITDNS = ''
+NYITDNS = '167.206.4.141'
+
+CASERVICE = '52.8.69.95'
+VASERVICE = '52.5.82.56'
 
 smartList = {'lb2.sid.eaufavor.info.': \
                 {
-                    '127.0.0.1':['8.9.10.11', '8.9.10.12'],
+                    'NYITDNS':[CASERVICE, VASERVICE, VASERVICE, VASERVICE],
                     'default':['8.9.10.13', '8.9.10.14'],
                 }
             }
