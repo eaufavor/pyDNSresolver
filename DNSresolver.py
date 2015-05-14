@@ -24,8 +24,9 @@ cache = {}
 # '74.82.42.42', '151.197.0.38']
 DNSlist = ['8.8.8.8']
 PORT = 53
+TTL = 10
 
-smartList = {'lb.dns.sid.eaufavor.info.': \
+smartList = {'lb2.sid.eaufavor.info.': \
                 {
                     '127.0.0.1':['8.9.10.11', '8.9.10.12'],
                     'default':['8.9.10.13', '8.9.10.14'],
@@ -36,6 +37,7 @@ def smartLookup(domain, client):
     if client in smartList[domain]:
         return random.choice(smartList[domain][client])
     else:
+        print 'new cient', client
         return random.choice(smartList[domain]['default'])
 
 
@@ -105,7 +107,7 @@ def dns_response(data, client):
                 if '.'.join(a.split(".")[:3]) not in ans_pool: #ignore the IP from same subnet 
                     empty_ans = False
                     reply.add_answer(RR(rname=qname, rtype=qtype,\
-                                 rclass=1, ttl=10, rdata=record_class(a)))
+                                 rclass=1, ttl=TTL, rdata=record_class(a)))
                     ans_pool['.'.join(a.split(".")[:3])] = 1
                 else:
                     pass
@@ -117,7 +119,7 @@ def dns_response(data, client):
                 if a not in ans_pool: # reduce redundancy
                     empty_ans = False
                     reply.add_answer(RR(rname=qname, rtype=qtype, rclass=1,\
-                                 ttl=10, rdata=record_class(a)))
+                                 ttl=TTL, rdata=record_class(a)))
                     ans_pool[a] = 1
 
     #print "---- Reply:\n", reply
