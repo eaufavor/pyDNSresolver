@@ -24,7 +24,11 @@ cache = {}
 # '74.82.42.42', '151.197.0.38']
 DNSlist = ['8.8.8.8']
 PORT = 53
-TTL = 10
+TTL = 20
+
+UCLADNS = '204.194.237.21'
+OKSUDNS = '139.78.100.1'
+NYITDNS = ''
 
 smartList = {'lb2.sid.eaufavor.info.': \
                 {
@@ -43,7 +47,7 @@ def smartLookup(domain, client):
 
 def fetch(dns_index_req):
     dns_index = dns_index_req[0]
-    domain = dns_index_req[1]
+    domain = dns_index_req[1].lower()
     query_type = dns_index_req[2]
     client = dns_index_req[3]
     if domain in smartList:
