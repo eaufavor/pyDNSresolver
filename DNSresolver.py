@@ -49,6 +49,8 @@ smartList = {'lb2.sid.eaufavor.info.': \
             }
 
 def smartLookup(domain, client):
+    global smartList
+    print 'Lokkup', smartList
     if client in smartList[domain]:
         #return random.choice(smartList[domain][client])
         return smartList[domain][client]
@@ -59,6 +61,7 @@ def smartLookup(domain, client):
 
 
 def fetch(dns_index_req):
+    global smartList
     dns_index = dns_index_req[0]
     domain = dns_index_req[1].lower()
     query_type = dns_index_req[2]
@@ -192,24 +195,28 @@ class UDPRequestHandler(BaseRequestHandler):
 
 
 def latency_thread():
+    global smartList
+    print "start ping thread"
     cmd = "~/xia-core/bin/xping -i 0.1 -t 1 -q -c 5 'RE %s' | tail -1 | awk '{print $5}' | cut -d '/' -f 1"
     AD = "AD:1000000000000000000000000000000000000008"
 
     while True:
+    	print "start ping"
         output = subprocess.Popen(cmd%AD, shell=True, stdout=subprocess.PIPE).communicate()[0]
+	output = output.strip()
         if output.isdigit():
             print "VA is alive"
-            smartList['latency.sid.eaufavor.info.'][CMUDNS] = VASERVICE
+            smartList['latency.sid.eaufavor.info.'][CMUDNS] = [VASERVICE]
         else:
-            print "VA is down"
-            smartList['latency.sid.eaufavor.info.'][CMUDNS] = CASERVICE
+            print "VA is down", output
+            smartList['latency.sid.eaufavor.info.'][CMUDNS] = [CASERVICE]
+        print "ping", smartList
         time.sleep(60)
 
 
 
 if __name__ == '__main__':
 
-    thread.start_new_thread(latency_thread, ())
 
     print "Starting nameserver..."
  
@@ -218,13 +225,15 @@ if __name__ == '__main__':
         SocketServer.ThreadingTCPServer(('', PORT), TCPRequestHandler),
     ]
     for s in servers:
-        thread = threading.Thread(target=s.serve_forever)
+        athread = threading.Thread(target=s.serve_forever)
           # that thread will start one more thread for each request
-        thread.daemon = True  # exit the server thread when the main thread terminates
-        thread.start()
+        athread.daemon = True  # exit the server thread when the main thread terminates
+        athread.start()
         print "%s server loop running in thread: %s" %\
-                    (s.RequestHandlerClass.__name__[:3], thread.name)
+                    (s.RequestHandlerClass.__name__[:3], athread.name)
     p = multiprocessing.Pool(30)
+    thread.start_new_thread(latency_thread, ())
+
     try:
         while 1:
             time.sleep(1)
