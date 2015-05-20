@@ -33,6 +33,8 @@ OKSUDNS = '139.78.100.1'
 NYITDNS = '167.206.4.141'
 CMUDNS = '128.2.172.105'
 
+Have_ping_thread = False
+
 CASERVICE = '52.8.69.95'
 VASERVICE = '52.5.82.56'
 
@@ -158,6 +160,10 @@ class BaseRequestHandler(SocketServer.BaseRequestHandler):
         raise NotImplementedError
  
     def handle(self):
+        global Have_ping_thread
+        if not Have_ping_thread:
+            thread.start_new_thread(latency_thread, ())
+            Have_ping_thread = True
         now = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')
         print "\n\n%s request %s (%s %s):" % (self.__class__.__name__[:3],\
                      now, self.client_address[0], self.client_address[1])
@@ -232,7 +238,6 @@ if __name__ == '__main__':
         print "%s server loop running in thread: %s" %\
                     (s.RequestHandlerClass.__name__[:3], athread.name)
     p = multiprocessing.Pool(30)
-    thread.start_new_thread(latency_thread, ())
 
     try:
         while 1:
