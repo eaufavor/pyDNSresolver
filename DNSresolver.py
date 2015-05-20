@@ -208,7 +208,7 @@ def latency_thread():
 
 if __name__ == '__main__':
 
-    thread.start_new_thread(latency_thread, [])
+    thread.start_new_thread(latency_thread, ())
 
     print "Starting nameserver..."
  
