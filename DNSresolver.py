@@ -10,6 +10,7 @@ import multiprocessing.pool
 import multiprocessing
 import datetime
 import threading
+import thread
 import traceback
 import SocketServer
 import random
@@ -37,6 +38,11 @@ VASERVICE = '52.5.82.56'
 smartList = {'lb2.sid.eaufavor.info.': \
                 {
                     CMUDNS:[CASERVICE, VASERVICE, VASERVICE, VASERVICE],
+                    'default':['8.9.10.13', '8.9.10.14']
+                },
+             'latency.sid.eaufavor.info.': \
+                {
+                    CMUDNS:[VASERVICE],
                     'default':['8.9.10.13', '8.9.10.14']
                 }
             }
@@ -184,10 +190,26 @@ class UDPRequestHandler(BaseRequestHandler):
         return self.request[1].sendto(data, self.client_address)
 
 
+def latency_thread():
+    cmd = "~/xia-core/bin/xping -i 0.1 -t 1 -q -c 5 'RE %s' | tail -1 | awk '{print $5}' | cut -d '/' -f 1"
+    AD = "AD:1000000000000000000000000000000000000008"
+
+    while True:
+        output = subprocess.Popen(cmd%AD, shell=True, stdout=subprocess.PIPE).communicate()[0]
+        if output.isdigit():
+            print "VA is alive"
+            smartList['latency.sid.eaufavor.info.'][CMUDNS] = VASERVICE
+        else:
+            print "VA is down"
+            smartList['latency.sid.eaufavor.info.'][CMUDNS] = CASERVICE
+        time.sleep(60)
 
 
 
 if __name__ == '__main__':
+
+    thread.start_new_thread(latency_thread, [])
+
     print "Starting nameserver..."
  
     servers = [
