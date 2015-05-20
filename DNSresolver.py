@@ -29,23 +29,26 @@ TTL = 20
 UCLADNS = '204.194.237.21'
 OKSUDNS = '139.78.100.1'
 NYITDNS = '167.206.4.141'
+CMUDNS = '128.2.172.105'
 
 CASERVICE = '52.8.69.95'
 VASERVICE = '52.5.82.56'
 
 smartList = {'lb2.sid.eaufavor.info.': \
                 {
-                    'NYITDNS':[CASERVICE, VASERVICE, VASERVICE, VASERVICE],
-                    'default':['8.9.10.13', '8.9.10.14'],
+                    CMUDNS:[CASERVICE, VASERVICE, VASERVICE, VASERVICE],
+                    'default':['8.9.10.13', '8.9.10.14']
                 }
             }
 
 def smartLookup(domain, client):
     if client in smartList[domain]:
-        return random.choice(smartList[domain][client])
+        #return random.choice(smartList[domain][client])
+        return smartList[domain][client]
     else:
         print 'new cient', client
-        return random.choice(smartList[domain]['default'])
+        #return random.choice(smartList[domain]['default'])
+        return smartList[domain]['default']
 
 
 def fetch(dns_index_req):
@@ -55,7 +58,7 @@ def fetch(dns_index_req):
     client = dns_index_req[3]
     if domain in smartList:
         ip = smartLookup(domain, client)
-        return ([ip], 0)
+        return (ip, 0)
     q = message.make_query(domain, query_type)
     rcode = q.rcode()
     count = 0
